@@ -29,7 +29,9 @@ merged_df_dict = {}
 #Read text files into dataframes
 for file, cols in files.items():
     df_dict[file] = pd.read_csv(f'./social_honeypot_icwsm_2011/{file}.txt', sep='\t', names=cols, index_col='UserID')
-    print(df_dict[file].head())
+    #print(df_dict[file].head())
+    print(f'Valeurs manquantes:{df_dict[file].isna().sum()}')
+    print(f'Valeurs=\n{df_dict[file][df_dict[file].isna().any(axis=1)]}')
  
 #Create columns indicating if users is a spammer or not
 for user in [SPAMMER, LEGIT_USER]:   
@@ -39,11 +41,12 @@ for user in [SPAMMER, LEGIT_USER]:
         merged_df_dict[user]['SpammerBoolean']=1
     elif user is LEGIT_USER:
         merged_df_dict[user]['SpammerBoolean']=0
-    print(merged_df_dict[user].head(10))
-    print(f'Columns={merged_df_dict[user].columns}')
+    #print(merged_df_dict[user].head(10))
+    #print(f'Columns={merged_df_dict[user].columns}')
     merged_df_dict[user].to_csv(f'./Cleaned_Data/{user}.csv')
 
 #Merge users into one dataframe
 df = pd.concat([merged_df_dict[SPAMMER], merged_df_dict[LEGIT_USER]])
 df.sort_values(by=['UserID'], inplace=True)
-df.to_csv(f'./Cleaned_Data/complete_users.csv')
+#df.to_csv(f'./Cleaned_Data/complete_users.csv')
+df.to_pickle(f'./Cleaned_Data/complete_users.pkl')
