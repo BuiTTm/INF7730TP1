@@ -5,7 +5,7 @@
 import pandas as pd
 import pickle as pck
 import numpy as np
-
+#import sklearn.preprocessing import Imputer
 #Constant strings
 SPAMMER = 'content_polluters'
 LEGIT_USER = 'legitimate_users'
@@ -96,8 +96,9 @@ class DataFrameCreator():
         datetime_cols = ['CreatedAt', 'CollectedAt']
         for col in datetime_cols:
             self.df[col] = pd.to_datetime(self.df[col])
-            
+                
         self.df_tweets = pd.concat([self.df_dict[f'{LEGIT_USER}_tweets'], self.df_dict[f'{SPAMMER}_tweets']])
+        self.df_tweets['CreatedAt'] = pd.to_datetime(self.df_tweets['CreatedAt'])
 
     def to_csv(self):
         #self.df_tweets.to_csv(f'./Cleaned_Data/tweets.csv')
@@ -130,11 +131,12 @@ class DataFrameCreator():
         self.display_complete_feature()
 
         #3e feature: the longevity of the account
-        last_active = self.df_tweets.groupby('UserID')['CreatedAt'].max().reset_index()
-        last_active.columns = ['UserID', 'LastActive']
-        self.df = pd.merge(self.df, last_active, on='UserID', how='left')
-        self.df['LastActive'] = pd.to_datetime(self.df['LastActive'])
-        self.df['AccountLongevity'] = (self.df['LastActive']-self.df['CreatedAt']).dt.days
+        #last_active = self.df_tweets.groupby('UserID')['CreatedAt'].max().reset_index()
+        #last_active.columns = ['UserID', 'LastActive']
+        #self.df = pd.merge(self.df, last_active, on='UserID', how='left')
+        #self.df['LastActive'] = pd.to_datetime(self.df['LastActive'])
+        #self.df['AccountLongevity'] = (self.df['LastActive']-self.df['CreatedAt']).dt.days
+        self.df['AccountLongevity'] = (self.df['CollectedAt']-self.df['CreatedAt']).dt.days        
         list_features.append('AccountLongevity')
         self.display_complete_feature()
 
@@ -164,30 +166,31 @@ class DataFrameCreator():
         self.display_complete_feature()
 
         #9e feature: Total tweets sent per day
-        self.df_tweets['CreatedAt'] = self.df_tweets['CreatedAt'].values.astype('<M8[D]')
+        self.df_tweets['CreatedAt_Days'] = self.df_tweets['CreatedAt'].values.astype('<M8[D]')
         #unique_date_tweet = self.df_tweets.groupby('UserID')['CreatedAt'].nunique().reset_index()
-        tweet_per_day = self.df_tweets.groupby('UserID').size() / self.df_tweets.groupby('UserID')['CreatedAt'].nunique()
+        tweet_per_day = self.df_tweets.groupby('UserID').size() / self.df_tweets.groupby('UserID')['CreatedAt_Days'].nunique()
         tweet_per_day = tweet_per_day.reset_index()
         tweet_per_day.columns = ['UserID', 'TweetSentPerDay']
         self.df = pd.merge(self.df, tweet_per_day, on='UserID', how='left')
         list_features.append('TweetSentPerDay')
         self.display_complete_feature()
         
-        #10e feature: total_tweet_on_account_lifetime_ratio(self):
+        #10e feature: number of tweet on lifetime duration of account
         #TODO Also outputs INF
         self.df['AvgTweetSentWhileActive'] = self.df['NumberOfTweets']/self.df['AccountLongevity']
         list_features.append('AvgTweetSentWhileActive')
         self.display_complete_feature()
 
-        #11e feature: number of tweet on lifetime duration of account
-        self.df['TweetOnAccLongevity'] = self.df['NumberOfTweets'] / self.df['AccountLongevity']
-        list_features.append('TweetOnAccLongevity')
+        #11e feature: number of URL per tweet
+        self.df_tweets['URLcount'] = self.df_tweets['Tweet'].str.count('http')
+        url_total = self.df_tweets.groupby('UserID').agg({'URLcount': 'sum'}).reset_index()        
+        self.df = pd.merge(self.df, url_total, on='UserID', how='left')
+        #self.df['UrlOnTweet'] = self.df_tweets['URLcount'] / self.df_tweets.groupby('UserID')['CreatedAt'].nunique()
+        self.df['UrlOnTweet'] = self.df['URLcount'] / self.df['NumberOfTweets']
+        list_features.append('UrlOnTweet')
         self.display_complete_feature()
 
         #12e feature: average URL link per tweet sent
-        self.df_tweets['URLcount'] = self.df_tweets['Tweet'].str.count('http')
-        url_total = self.df_tweets.groupby('UserID').agg({'URLcount': 'sum'}).reset_index()
-        self.df = pd.merge(self.df, url_total, on='UserID', how='left')
         nb_tweet = self.df_tweets.groupby('UserID')['Tweet'].size().reset_index()
         nb_tweet.columns = ['UserID', 'TweetSample']
         self.df = pd.merge(self.df, nb_tweet, on='UserID', how='left')
@@ -204,7 +207,7 @@ class DataFrameCreator():
         self.display_complete_feature()
 
         #14e feature: avg time between tweet
-        time_btw_tweet = self.df_tweets.sort_values(['UserID','CreatedAt']).groupby('UserID')['CreatedAt'].diff().dt.seconds.reset_index()
+        time_btw_tweet = (self.df_tweets.sort_values(['UserID','CreatedAt']).groupby('UserID')['CreatedAt'].diff().dt.total_seconds()/60).reset_index()
         time_btw_tweet.columns = ['UserID', 'Diff']
         avg_time_btw_tweet = time_btw_tweet.groupby('UserID')['Diff'].mean().reset_index()
         avg_time_btw_tweet.columns = ['UserID', 'AvgTimeBetween']
@@ -222,7 +225,11 @@ class DataFrameCreator():
         self.df = self.df[list_features]
         print(self.df.head())
         print(self.df.dtypes)
-        print(self.df.isna().sum())        
+        print(self.df.isna().sum())  
+        
+          
+    def fill_missing_data(self):
+        pass
         
     # #1e feature: the length of the screen name
     # def length_screen_name(self):
@@ -316,7 +323,7 @@ class DataFrameCreator():
     #14e feature
     def avg_time_between_tweet(self):
         #avg_time_btw_tweet = (self.df_tweets.groupby(by=['UserID'])['CreatedAt'].max() - self.df_tweets.groupby(by=['UserID'])['CreatedAt'].min()).dt.days
-        self.df_tweets['Diff'] = self.df_tweets.sort_values(['UserID','CreatedAt']).groupby('UserID')['CreatedAt'].diff().dt.seconds
+        self.df_tweets['Diff'] = self.df_tweets.sort_values(['UserID','CreatedAt'], ascending=False).groupby('UserID')['CreatedAt'].diff().dt.minutes
         #self.df_tweets.to_csv(f'./tweets.csv')
         avg_time_btw_tw = self.df_tweets.groupby('UserID')['Diff'].mean()
         avg_time_btw_tw = avg_time_btw_tw.reset_index()
