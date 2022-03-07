@@ -66,8 +66,8 @@ class ModelLearning():
         Args:
             filename (str): desired file name to save the Dataframe as
         """
-        print(f'Saving dataframe to .{FOLDER_LOCATION}{filename}')
-        self.scaled_x.to_csv(f'.{FOLDER_LOCATION}/{filename}')
+        print(f'Saving dataframe to .{filename}')
+        self.scaled_x.to_csv(f'.{filename}')
                 
     def split_dataset(self):
         """_summary_
@@ -85,6 +85,7 @@ class ModelLearning():
         """
         self.ml_models['DecisionTree'] = DecisionTreeClassifier(random_state=66)\
             .fit(self.X_train, self.y_train)#.predict(self.X_test)
+        self.ml_models_pred['DecisionTree'] = self.ml_models['DecisionTree'].predict(self.X_test)
         print(f'Training of Decision Tree completed')
 
     
@@ -92,10 +93,11 @@ class ModelLearning():
         """Random Forest model to be initialized 
         """
         self.ml_models['RandomForest'] = RandomForestClassifier(
-            n_estimators=800, 
+            n_estimators=700, 
             random_state=66, 
             bootstrap= False, 
             criterion= 'entropy').fit(self.X_train, self.y_train)#.predict(self.X_test)
+        self.ml_models_pred['RandomForest'] = self.ml_models['RandomForest'].predict(self.X_test)
         print(f'Training of Random Forest completed')
 
 
@@ -103,11 +105,12 @@ class ModelLearning():
         """Bagging model to be initialized 
         """    
         self.ml_models['Bagging'] = BaggingClassifier(
-            n_estimators=800, 
+            n_estimators=900, 
             max_features= 15, 
             max_samples=7000, 
             bootstrap= False, 
             random_state=66).fit(self.X_train, self.y_train)#.predict(self.X_test)
+        self.ml_models_pred['Bagging'] = self.ml_models['Bagging'].predict(self.X_test)
         print(f'Training of Bag completed')
 
 
@@ -117,6 +120,7 @@ class ModelLearning():
         self.ml_models['Ada'] = AdaBoostClassifier(
             n_estimators=800, 
             random_state=66).fit(self.X_train, self.y_train)#.predict(self.X_test)
+        self.ml_models_pred['Ada'] = self.ml_models['Ada'].predict(self.X_test)
         print(f'Training of Ada completed')
 
 
@@ -124,6 +128,8 @@ class ModelLearning():
         """Naives Bayes model to be initialized
         """
         self.ml_models['NaivesBayes'] = GaussianNB().fit(self.X_train, self.y_train)#.predict(self.X_test)
+        self.ml_models_pred['NaivesBayes'] = self.ml_models['NaivesBayes'].predict(self.X_test)
+
         print(f'Training of NaiveBayes completed')
     
     def predict_models(self):
