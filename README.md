@@ -1,5 +1,4 @@
-# INF7730TP1
-# Travail effectué par Bui Trung Tin Michel - BUIT31059004
+# MACHINE LEARNING MODEL
 
 ## Détails du travail
 * Le code a été executé avec Python 3.7.11
