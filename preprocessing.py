@@ -1,5 +1,5 @@
 #Features extraction 
-#Auteur: Bui Trung Tin Michel BUIT31059004
+#Auteur: Bui Trung Tin Michel 
 
 #Import of libraries
 import numpy as np
