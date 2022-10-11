@@ -1,5 +1,5 @@
 #Fichier de pre-traitement 
-#Auteur: Bui Trung Tin Michel BUIT31059004
+#Auteur: Bui Trung Tin Michel 
 
 #Chargement de librairie
 import pandas as pd
