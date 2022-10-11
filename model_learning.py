@@ -1,5 +1,5 @@
 #Module d'apprentissage automatique sous forme de librairie
-#Auteur: Bui Trung Tin Michel BUIT31059004
+#Auteur: Bui Trung Tin Michel
 import numpy as np
 import pandas as pd
 from sklearn import naive_bayes
