@@ -1,5 +1,5 @@
 #Tache 2B: Selection des meilleurs features selon le chi2
-#Auteur: Bui Trung Tin Michel BUIT31059004
+#Auteur: Bui Trung Tin Michel
 
 #Re-use of class previously created
 from model_learning import ModelLearning
