@@ -1,5 +1,5 @@
 #Tache 1: Comparaison full features des algorithmes
-#Auteur: Bui Trung Tin Michel BUIT31059004
+#Auteur: Bui Trung Tin Michel
 
 #Import of libraries
 #Voir fichier model_learning.py
